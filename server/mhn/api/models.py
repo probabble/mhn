@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import UniqueConstraint, func
 
-from mhn import db
+from mhn import db, mhn
 from mhn.api import APIModel
 from mhn.auth.models import User
 from mhn.common.clio import Clio
