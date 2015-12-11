@@ -12,8 +12,8 @@ from bson.errors import InvalidId
 from mhn import db, csrf
 from mhn.api import errors
 from mhn.api.models import (
-        Sensor, Rule, DeployScript as Script,
-        DeployScript, RuleSource)
+    Sensor, Rule, DeployScript as Script,
+    DeployScript, RuleSource, SensorHost)
 from mhn.api.decorators import deploy_auth, sensor_auth, token_auth
 from mhn.common.utils import error_response
 from mhn.common.clio import Clio
@@ -97,6 +97,17 @@ def connect_sensor(uuid):
     db.session.commit()
     return jsonify(sensor.to_dict())
 
+
+# API support for the hosts
+@api.route('/host/', methods=['GET'])
+@token_auth
+def get_hosts():
+    req = request.args.to_dict()
+    if 'api_key' in req:
+        del req['api_key']
+    resp = make_response(json.dumps([s.to_dict() for h in SensorHost.query.filter_by(**req)]))
+    resp.headers['Content-Type'] = "application/json"
+    return resp
 
 # Utility functions that generalize the GET
 # requests of resources from Mnemosyne.

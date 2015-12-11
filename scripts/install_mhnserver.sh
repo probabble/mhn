@@ -47,6 +47,7 @@ server {
 
     location  /static {
       alias $MHN_HOME/server/mhn/static;
+      sendfile  off;
     }
 }
 EOF

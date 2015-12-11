@@ -96,6 +96,7 @@ def generate_config():
         mail_password = args.mail_pass
         default_mail_sender = args.mail_sender
         log_file_path = args.log_file_path
+        sensor_ssh_port = args.sensor_ssh_port
     else:
         # Collect values from user
         debug = raw_input('Do you wish to run in Debug mode?: y/n ')
@@ -147,6 +148,7 @@ def generate_config():
         default_mail_sender = raw_input('Mail default sender [""]: ')
 
         log_file_path = raw_input('Path for log file ["{}"]: '.format(default_log_path))
+        sensor_ssh_port = raw_input('SSH port sensors will listen on ["{}"]: '.format("22"))
 
     server_base_url = server_base_url if server_base_url.strip() else default_base_url
     honeymap_url = honeymap_url if honeymap_url.strip() else default_honeymap_url
@@ -165,6 +167,7 @@ def generate_config():
     localconfig['MAIL_PASSWORD'] = mail_password if mail_password else ''
     localconfig['DEFAULT_MAIL_SENDER'] = default_mail_sender if default_mail_sender else ""
     localconfig['LOG_FILE_PATH'] = log_file_path
+    localconfig['SENSOR_SSH_PORT'] = sensor_ssh_port if sensor_ssh_port else 22
 
     with open('config.py.template', 'r') as templfile,\
          open('config.py', 'w') as confile:

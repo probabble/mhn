@@ -9,6 +9,27 @@ from mhn.api import APIModel
 from mhn.auth.models import User
 from mhn.common.clio import Clio
 
+class SensorHost(db.Model, APIModel):
+
+    __tablename__ = 'sensorhosts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(36), unique=True)
+
+    name = db.Column(db.String(150))
+    location = db.Column(db.String(2000))
+
+    ip = db.Column(db.String(15))
+    created_date = db.Column(db.DateTime(), default=datetime.utcnow)
+
+    updated = db.Column(db.DateTime(), default=datetime.utcnow)
+    exception = db.Column(db.String(2000))
+
+    status = db.Column(db.String(20))
+
+    @property
+    def sensors(self):
+        return Sensor.query.filter(hostname=self.hostname)
 
 class Sensor(db.Model, APIModel):
 

@@ -70,3 +70,4 @@ HONEYPOT_CHANNELS = {
     'suricata': ['suricata.events'],
     'elastichoney': ['elastichoney.events'],
 }
+

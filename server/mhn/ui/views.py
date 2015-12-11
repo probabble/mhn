@@ -9,8 +9,8 @@ from sqlalchemy import desc, func
 
 from mhn.ui.utils import get_flag_ip, get_sensor_name
 from mhn.api.models import (
-        Sensor, Rule, DeployScript as Script,
-        RuleSource)
+    Sensor, Rule, DeployScript as Script,
+    RuleSource, SensorHost)
 from mhn.auth import login_required, current_user
 from mhn.auth.models import User, PasswdReset, ApiKey
 from mhn import db, mhn
@@ -144,6 +144,18 @@ def get_sensors():
     sensors = mongo_pages(sensors, total, limit=10)
     return render_template('ui/sensors.html', sensors=sensors,
                            view='ui.get_sensors', pag=pag)
+
+@ui.route('/hosts/', methods=['GET'])
+@login_required
+def get_hosts():
+    hosts = SensorHost.query.all()
+    total = SensorHost.query.count()
+    pag = paginate_options(limit=10)
+
+    hosts = hosts[pag['skip']:pag['skip'] + pag['limit']]
+    hosts = mongo_pages(hosts, total, limit=10)
+    return render_template('ui/hosts.html', hosts=hosts, view='ui.get_hosts', pag=pag)
+
 
 
 @ui.route('/add-sensor/', methods=['GET'])
