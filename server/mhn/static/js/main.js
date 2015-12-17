@@ -245,6 +245,27 @@ $(document).ready(function() {
         });
     }
 
+    if ($('#host-table').length >= 1) {
+        $('.text-edit').focusout(function() {
+            var input = $(this);
+            var fieldName = input.attr('data-field-name');
+            var data = new Object();
+            var sensorHostId = $(this).attr('data-sensorhost-id');
+
+            data[fieldName] = input.val();
+            requestChange(
+                '/api/host/' + sensorHostId + '/',  // URL
+                input,
+                data,                    // Data
+                function() {},           // Success
+                function() {             // Error
+                    // Reverses the state.
+                    alert('Could not save changes.');
+                }
+            );
+        });
+    }
+
     if ($('#user-form').length >= 1) {
         $('#submit-user').click(function(e) {
             var email = $('#email-edit').val();

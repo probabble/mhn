@@ -12,15 +12,29 @@ from mhn.common.clio import Clio
 class SensorHost(db.Model, APIModel):
 
     __tablename__ = 'sensorhosts'
+    all_fields = {
+        'uuid': {'required': False, 'editable': False},
+        'name': {'required': True, 'editable': True},
+        'hostname': {'required': True, 'editable': True},
+        'ip': {'required': False, 'editable': False},
+
+        'created_date': {'required': False, 'editable': False},
+        'location': {'required': True, 'editable': True},
+
+        'updated': {'required': False, 'editable': False},
+        'exception': {'required': False, 'editable': False},
+        'status': {'required': False, 'editable': False},
+    }
 
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(36), unique=True)
 
     name = db.Column(db.String(150))
-    location = db.Column(db.String(2000))
-
+    hostname = db.Column(db.String(256))
     ip = db.Column(db.String(15))
+
     created_date = db.Column(db.DateTime(), default=datetime.utcnow)
+    location = db.Column(db.String(2000))
 
     updated = db.Column(db.DateTime(), default=datetime.utcnow)
     exception = db.Column(db.String(2000))
@@ -29,7 +43,21 @@ class SensorHost(db.Model, APIModel):
 
     @property
     def sensors(self):
-        return Sensor.query.filter(hostname=self.hostname)
+        return Sensor.query.filter_by(hostname=self.hostname).all()
+
+    def to_dict(self):
+        return dict(
+            uuid=self.uuid,
+            name=self.name,
+            created_date=str(self.created_date),
+            hostname=self.hostname,
+            location=self.location,
+            ip=self.ip,
+            updated=self.updated,
+            exception=self.exception,
+            status=self.status,
+            identifier=self.uuid,
+        )
 
 class Sensor(db.Model, APIModel):
 

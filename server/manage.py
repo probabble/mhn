@@ -48,7 +48,7 @@ if __name__ == '__main__':
     def runlocal():
         serverurl = urlparse(config.SERVER_BASE_URL)
         mhn.run(debug=config.DEBUG, host='0.0.0.0',
-                port=serverurl.port)
+                port=serverurl.port or 8000)
 
     @manager.command
     def fetch_rules():

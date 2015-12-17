@@ -105,9 +105,31 @@ def get_hosts():
     req = request.args.to_dict()
     if 'api_key' in req:
         del req['api_key']
-    resp = make_response(json.dumps([s.to_dict() for h in SensorHost.query.filter_by(**req)]))
+    resp = make_response(json.dumps([h.to_dict() for h in SensorHost.query.filter_by(**req)]))
     resp.headers['Content-Type'] = "application/json"
     return resp
+
+@api.route('/host/<uuid>/', methods=['PUT'])
+@csrf.exempt
+def update_host(uuid):
+    host = SensorHost.query.filter_by(uuid=uuid).first_or_404()
+    for field in request.json.keys():
+        if field in SensorHost.editable_fields():
+            setattr(host, field, request.json[field])
+        elif field in SensorHost.fields():
+            return error_response(
+                    errors.API_FIELD_NOT_EDITABLE.format(field), 400)
+        else:
+            return error_response(
+                    errors.API_FIELD_INVALID.format(field), 400)
+    else:
+        try:
+            db.session.commit()
+        except IntegrityError:
+            return error_response(
+                    errors.API_SENSOR_EXISTS.format(request.json['name']), 400)
+        return jsonify(host.to_dict())
+
 
 # Utility functions that generalize the GET
 # requests of resources from Mnemosyne.
