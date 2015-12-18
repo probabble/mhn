@@ -31,7 +31,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     
     honeypot.vm.provision :shell, inline: 'echo mhn-honeypot > /etc/hostname'
     honeypot.vm.provision :shell, inline: 'echo "127.0.1.1 mhn-honeypot" >> /etc/hosts'
-    honeypot.vm.provision :shell, inline: 'hostname mhn-honeypot'
+    honeypot.vm.provision :shell, inline: 'hostname honeypie'
+    honeypot.ssh.guest_port = 51122
   end
 
 

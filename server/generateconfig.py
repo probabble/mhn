@@ -97,6 +97,7 @@ def generate_config():
         default_mail_sender = args.mail_sender
         log_file_path = args.log_file_path
         sensor_ssh_port = args.sensor_ssh_port
+
     else:
         # Collect values from user
         debug = raw_input('Do you wish to run in Debug mode?: y/n ')

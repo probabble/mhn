@@ -1,1 +1,1 @@
-from mhn.tasks.sensors import unconfigured, configure_sensors, update_sensors
+from mhn.tasks.sensors import UNCONFIGURED, configure_sensors

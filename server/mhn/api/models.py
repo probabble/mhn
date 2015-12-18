@@ -1,6 +1,7 @@
 import string
 from random import choice
 from datetime import datetime
+from uuid import uuid1
 
 from sqlalchemy import UniqueConstraint, func
 
@@ -27,7 +28,7 @@ class SensorHost(db.Model, APIModel):
     }
 
     id = db.Column(db.Integer, primary_key=True)
-    uuid = db.Column(db.String(36), unique=True)
+    uuid = db.Column(db.String(36), unique=True, default=uuid1)
 
     name = db.Column(db.String(150))
     hostname = db.Column(db.String(256))
@@ -41,9 +42,37 @@ class SensorHost(db.Model, APIModel):
 
     status = db.Column(db.String(20))
 
+    def __init__(
+          self, uuid=None, name=None, created_date=None, hostname=None,
+          ip=None, location=None, updated=None, exception=None, status=None, **args):
+
+        self.uuid = uuid or uuid1().hex
+        self.name = name
+        self.created_date = created_date
+        self.ip = ip
+        self.hostname = hostname
+        self.location = location
+        self.updated = updated
+        self.exception = exception
+        self.status = status
+
     @property
     def sensors(self):
         return Sensor.query.filter_by(hostname=self.hostname).all()
+
+    @property
+    def keyfile(self):
+        return mhn.config['SENSOR_KEYS_DIR'] + self.hostname
+
+    @property
+    def fab_env(self):
+        return dict(
+                user='pi',
+                password = 'raspberry',
+                hostname=self.hostname,
+                ssh_keyfile=self.keyfile,
+                port=mhn.config['SENSOR_SSH_PORT']
+        )
 
     def to_dict(self):
         return dict(
