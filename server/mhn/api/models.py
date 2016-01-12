@@ -67,11 +67,12 @@ class SensorHost(db.Model, APIModel):
     @property
     def fab_env(self):
         return dict(
-                user='pi',
-                password = 'raspberry',
-                hostname=self.hostname,
-                ssh_keyfile=self.keyfile,
-                port=mhn.config['SENSOR_SSH_PORT']
+            user='pi',
+            password = 'raspberry',
+            host_string = self.hostname + ".local",
+            hostname=self.hostname + ".local",
+            ssh_keyfile=self.keyfile,
+            port=mhn.config['SENSOR_SSH_PORT'],
         )
 
     def to_dict(self):

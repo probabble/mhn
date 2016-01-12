@@ -116,6 +116,29 @@ $(document).ready(function() {
         });
     });
 
+    $('#submit-run-deploy').click( function(e) {
+        var script = $('#deploy_script_id').val();
+        var host = $('#deploy_host_id').val();
+        $.ajax({
+            type: 'POST',
+            url: $('#run-deploy-form').attr('action'),
+            headers: {'X-CSRFToken': $('#_csrf_token').val()},
+            data: JSON.stringify({
+                script: script,
+                host: host
+            }),
+            contentType: 'application/json',
+            success: function(resp) {poll_for_task_status(resp)},
+            error: function(resp) {
+                var result =  $('#result-text');
+                result.removeClass('success').addClass('warning');
+                result.html("<h5> something went wrong:</h5> <p>" + resp.responseJSON.error+"</p>");
+                result.show();
+            }
+
+        })
+    });
+
     $('#submit-script').click(function(e) {
         e.preventDefault();
 
@@ -414,3 +437,29 @@ $(document).ready(function() {
         });
     }
 });
+
+function poll_for_task_status(resp) {
+    $.ajax({
+        type: "GET",
+        url:"/api/deployment-status",
+        data: {task_id: resp.task.id},
+        contentType: 'application/json',
+        success: function(resp) {
+            var status = $('#status-text');
+            var taskStatus =  resp.task.status
+            status.html("<h4>" + taskStatus + "</h4>");
+            status.show();
+            if (taskStatus === "PENDING") {
+                setTimeout(function () {
+                    poll_for_task_status(resp)
+                }, 1000)
+            }
+            else if (taskStatus === "FAILURE") {
+                status.append("<p>" + resp.task.exception + "</p>")
+            }
+            else if (taskStatus === "SUCCESS") {
+                // todo: redirect to sensor host page
+            }
+        }
+    })
+}

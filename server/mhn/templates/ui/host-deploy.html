@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Manage Deploy{% endblock %}
+{% block content %}
+    <div class="row">
+        <form id="deploy-select" method="get" action="">
+
+        <div class="small-4 columns">
+            <h3>Select Script</h3>
+                <select onchange="this.form.submit();" name="script_id">
+                    <option value="0">Select script</option>
+
+                    {% for s in scripts %}
+                    <option {% if script.id == s.id %}selected{% endif %} value={{ s.id }}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+        </div>
+        <div class="small-4 columns">
+            <h3>Select Honeypot</h3>
+                <select onchange="this.form.submit();" name="host_id">
+                     <option value="0">Select host</option>
+                    {% for h in hosts %}
+                    <option {% if host.id == h.id %}selected{% endif %} value={{ h.id }}>{{ h.name }}</option>
+                    {% endfor %}
+                </select>
+        </div>
+        </form>
+
+    </div>
+
+
+    <div class="row">
+        <div class="medium-4 columns">
+            <h4 align="right">
+            {% if script.name %}
+             {{ script.name }}
+            {% else %}
+            [select script]
+            {% endif %}
+            </h4>
+        </div>
+
+        <div class="medium-3 columns">
+        <form id="run-deploy-form" method="post" action="{{ url_for('api.deploy_script_to_host') }}">
+            <input id="_csrf_token" name="_csrf_token" type="hidden" value="{{ csrf_token() }}">
+            <input type="hidden" id="deploy_script_id" value="{{ script.id }}">
+            <input type="hidden" id="deploy_host_id" value="{{ host.id }}">
+
+            <h4 align="center">
+
+                {% if host and script.name %}
+                <input style="float:right;" type="button" class="small button" id="submit-run-deploy" value="DEPLOY =>"/>
+            {% endif %}
+
+            </h4>
+        </form>
+        </div>
+
+        <div class="medium-4 columns">
+            <h4>
+            {% if host %}
+            {{ host.name }} ({{ host.hostname }})
+            {% else %}
+            [select host]
+            </h4>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="columns medium-centered medium-6">
+            <h3 align="center" id="result-text"></h3>
+            <h3 align="center" id="status-text"></h3>
+
+        </div>
+    </div>
+
+
+{% endblock %}

@@ -121,11 +121,14 @@ def run_updates():
             update(host)
 
 @celery.task
-def run_pings():
-    sensor_hosts = SensorHost.query.all()
+def run_pings(host_id=None):
+    if host_id:
+        sensor_hosts = SensorHost.query.filter_by(id=host_id)
+    else:
+        sensor_hosts = SensorHost.query.all()
 
     @fabric_task
-    def checkup(sensor_host):
+    def ping(sensor_host):
         """
         check in with important services
         :param sensor_host:
@@ -133,16 +136,16 @@ def run_pings():
         """
 
         try:
-            result = run("echo hostname")
+            result = run("hostname")
             sensor_host.status = "ok"
+            db.session.commit()
+            return result
 
         except Exception, e:
             sensor_host.status = "lost"
-            result = e
-
-        db.session.commit()
-        return result
+            db.session.commit()
+            raise Exception(e)
 
     for host in sensor_hosts:
         with fab_settings(**host.fab_env):
-            checkup(host)
+            ping(host)

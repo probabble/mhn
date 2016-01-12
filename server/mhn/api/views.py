@@ -3,7 +3,6 @@ from StringIO import StringIO
 import csv
 
 from uuid import uuid1
-
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from flask import Blueprint, request, jsonify, make_response
@@ -18,9 +17,10 @@ from mhn.api.decorators import deploy_auth, sensor_auth, token_auth
 from mhn.common.utils import error_response
 from mhn.common.clio import Clio
 from mhn.auth import current_user, login_required
-
+from mhn.tasks.sensors import run_pings, run_installation
 
 api = Blueprint('api', __name__, url_prefix='/api')
+
 
 
 # Endpoints for the Sensor resource.
@@ -454,3 +454,53 @@ def get_script():
         return resp
     else:
         return jsonify(script.to_dict())
+
+@api.route('/deploy-script-to-host/', methods=['POST'])
+@deploy_auth
+def deploy_script_to_host():
+    try:
+        params = json.loads(request.data)
+        script_id = params.get("script")
+        script = Script.query.get(script_id)
+
+        host_id = params.get("host")
+        host = SensorHost.query.get(host_id)
+
+        task = run_pings.delay(host_id)
+
+        return jsonify({
+            "script": {"name": script.name},
+            "host": {"name": host.name, "hostname": host.hostname},
+            "task": {"id": task.id}
+        })
+
+    except Exception, e:
+        response = jsonify({
+            "error": str(e)
+        })
+        response.status_code = 500
+        return response
+
+@api.route('/deployment-status/', methods=['GET'])
+@deploy_auth
+def deployment_status():
+    try:
+        result = run_pings.AsyncResult(request.args.get("task_id"))
+        task_data = {
+            "task": {
+                "id": result.task_id,
+                "status": result.status,
+                "name": result.task_name
+        }}
+        if result.status == "FAILURE":
+            task_data['task']['exception'] = result.result.message.message
+
+        return jsonify(task_data)
+
+
+    except Exception, e:
+        response = jsonify({
+            "error": str(e)
+        })
+        response.status_code = 500
+        return response

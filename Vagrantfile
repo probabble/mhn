@@ -15,9 +15,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     server.vm.box = "ubuntu/trusty64" # Ubuntu 14.04
     #server.vm.box = "chef/centos-6.5"  # Centos 6.5
     server.vm.network "private_network", ip: "10.254.254.100"
+
     server.vm.network "forwarded_port", guest: 80, host: 8088
     server.vm.network "forwarded_port", guest: 8000, host: 8000
-
+    server.vm.network "forwarded_port", guest: 5555, host: 5555
     server.vm.provision :shell, inline: 'echo mhn-server > /etc/hostname'
     server.vm.provision :shell, inline: 'echo "127.0.1.1 mhn-server" >> /etc/hosts'
     server.vm.provision :shell, inline: 'hostname mhn-server'

@@ -1,9 +1,10 @@
+import json
 from datetime import datetime, timedelta
 from pygal.style import *
 import pygal
 from flask import (
-        Blueprint, render_template, request, url_for,
-        redirect, g)
+    Blueprint, render_template, request, url_for,
+    redirect, g, jsonify)
 from flask_security import logout_user as logout
 from sqlalchemy import desc, func
 
@@ -156,7 +157,17 @@ def get_hosts():
     hosts = mongo_pages(hosts, total, limit=10)
     return render_template('ui/hosts.html', hosts=hosts, view='ui.get_hosts', pag=pag)
 
+@ui.route('/deploy-to-hosts/', methods=['GET'])
+@login_required
+def deploy_to_hosts():
+    hosts = SensorHost.query.all()
+    host = get_host(request)
+    scripts = Script.query.all()
+    script = get_script(request)
 
+    return render_template('ui/host-deploy.html',
+                           hosts=hosts, host=host, scripts=scripts, script=script,
+                           view='ui.deploy_to_hosts')
 
 @ui.route('/add-sensor/', methods=['GET'])
 @login_required
@@ -164,22 +175,44 @@ def add_sensor():
     return render_template('ui/add-sensor.html')
 
 
-@ui.route('/manage-deploy/', methods=['GET'])
-@login_required
-def deploy_mgmt():
+def get_script(request):
     script_id = request.args.get('script_id')
     if not script_id or script_id == '0':
         script = Script(name='', notes='', script='')
     else:
         script = Script.query.get(script_id)
+    return script
+
+def get_or_new_script(request):
+    script_id = request.args.get('script_id')
+    if not script_id or script_id == '0':
+        script = Script(name='', notes='', script='')
+    else:
+        script = Script.query.get(script_id)
+    return script
+
+def get_host(request):
+    host_id = request.args.get('host_id')
+    if host_id:
+        return SensorHost.query.get(host_id)
+    else:
+        return None
+
+@ui.route('/manage-deploy/', methods=['GET'])
+@login_required
+def deploy_mgmt():
+    script = get_script(request)
     return render_template(
             'ui/script.html', scripts=Script.query.order_by(Script.date.desc()),
             script=script)
+
 
 @ui.route('/honeymap/', methods=['GET'])
 @login_required
 def honeymap():
     return render_template('ui/honeymap.html')
+
+
 
 @ui.route('/add-user/', methods=['GET'])
 @login_required
