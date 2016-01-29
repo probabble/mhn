@@ -466,7 +466,7 @@ def deploy_script_to_host():
         host_id = params.get("host")
         host = SensorHost.query.get(host_id)
 
-        task = run_pings.delay(host_id)
+        task = run_installation.delay(script_id, host_id)
 
         return jsonify({
             "script": {"name": script.name},
@@ -485,7 +485,7 @@ def deploy_script_to_host():
 @deploy_auth
 def deployment_status():
     try:
-        result = run_pings.AsyncResult(request.args.get("task_id"))
+        result = run_installation.AsyncResult(request.args.get("task_id"))
         task_data = {
             "task": {
                 "id": result.task_id,
@@ -493,8 +493,10 @@ def deployment_status():
                 "name": result.task_name
         }}
         if result.status == "FAILURE":
-            task_data['task']['exception'] = result.result.message.message
-
+            message = result.result.message
+            if hasattr(message, 'message'):
+                message = message.message
+            task_data['task']['exception'] = message
         return jsonify(task_data)
 
 

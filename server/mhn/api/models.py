@@ -4,7 +4,9 @@ from datetime import datetime
 from uuid import uuid1
 
 from sqlalchemy import UniqueConstraint, func
+from sqlalchemy.orm import relationship
 
+from config import SENSOR_HOST_LOCATION
 from mhn import db, mhn
 from mhn.api import APIModel
 from mhn.auth.models import User
@@ -42,6 +44,8 @@ class SensorHost(db.Model, APIModel):
 
     status = db.Column(db.String(20))
 
+    sensors = relationship("Sensor", backref="host")
+
     def __init__(
           self, uuid=None, name=None, created_date=None, hostname=None,
           ip=None, location=None, updated=None, exception=None, status=None, **args):
@@ -69,8 +73,8 @@ class SensorHost(db.Model, APIModel):
         return dict(
             user='pi',
             password = 'raspberry',
-            host_string = self.hostname + ".local",
-            hostname=self.hostname + ".local",
+            host_string = SENSOR_HOST_LOCATION.format(hostname=self.hostname),
+            hostname=self.hostname,
             ssh_keyfile=self.keyfile,
             port=mhn.config['SENSOR_SSH_PORT'],
         )
@@ -115,6 +119,10 @@ class Sensor(db.Model, APIModel):
     hostname = db.Column(db.String(50))
     identifier = db.Column(db.String(50), unique=True)
     honeypot = db.Column(db.String(50))
+
+    host_id = db.Column(db.Integer, db.ForeignKey("sensorhosts.id"), nullable=True)
+    # host = relationship("SensorHost", back_populates="sensors")
+
 
     def __init__(
           self, uuid=None, name=None, created_date=None, honeypot=None,

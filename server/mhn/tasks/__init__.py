@@ -16,4 +16,7 @@ class ContextTask(TaskBase):
         with mhn.app_context():
             return TaskBase.__call__(self, *args, **kwargs)
 
+    def on_failure(self, *args, **kwargs):
+        print args, kwargs, "FAIL"
+
 celery.Task = ContextTask

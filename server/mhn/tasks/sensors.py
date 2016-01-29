@@ -2,23 +2,28 @@ from fabric.contrib.files import sed
 from fabric.exceptions import NetworkError
 from fabric.operations import run, sudo, local, put
 
+from config import SENSOR_HOST_LOCATION
 from mhn.tasks import celery
+
 from fabric.decorators import task as fabric_task
 from fabric.context_managers import settings as fab_settings, cd
-from mhn.api.models import DeployScript, SensorHost
+from mhn.api.models import DeployScript, SensorHost, Sensor
 
 RFC_2822 = "%a, %d %b %Y %H:%M:%S +0000"
 
 from mhn import mhn, db
 
 UNCONFIGURED = dict(
-    host_string = 'honeypie.local',
-    hostname = 'honeypie.local',
+    host_string = SENSOR_HOST_LOCATION.format(hostname='honeypie'),
+    hostname = 'honeypie',
     user = 'pi',
     password = 'raspberry',
     port = mhn.config['SENSOR_SSH_PORT'],
     ssh_keyfile=mhn.config['SENSOR_KEYS_DIR'] + 'unconfigured'
 )
+
+class FabricException(Exception):
+    pass
 
 @celery.task
 def configure_sensors():
@@ -66,10 +71,10 @@ def configure_sensors():
 
         # disable the old key on the sensor host
 
-    with fab_settings(**UNCONFIGURED):
+    with fab_settings(warn_only=True, **UNCONFIGURED):
         configure()
 
-@celery.task
+@celery.task()
 def run_installation(script_id, host_id):
     """
     runs an installation script on a host
@@ -77,8 +82,28 @@ def run_installation(script_id, host_id):
     :param host_id:
     :return:
     """
-    script = DeployScript.query.get(id=script_id)
-    host = SensorHost.query.get(id=host_id)
+
+    @fabric_task
+    def install(script, script_file):
+        try:
+            put(script_file, '/home/pi/deploy.sh', use_sudo=True)
+            url = mhn.config.get("SERVER_BASE_URL")
+            port = mhn.config.get("SERVER_PORT", None)
+            if port:
+                url += ":{}".format(port)
+
+            deploy_key = mhn.config.get("DEPLOY_KEY")
+            with cd("/home/pi/"):
+                result = sudo("bash /home/pi/deploy.sh {url} {deploy_key}".format(url=url, capture=True, deploy_key=deploy_key, id=script.id))
+                final_line = result.split('\n')[-1]
+                if final_line.startswith("fatal"):
+                    raise Exception(final_line)
+            return "ok"
+        except Exception, e:
+            return Exception(e)
+
+    script = DeployScript.query.get(script_id)
+    host = SensorHost.query.get(host_id)
 
     # run the deploy script on the sensor
     filename = '/tmp/{host}_{honeypot}.sh'.format(host=host.hostname, honeypot=script.id)
@@ -86,16 +111,32 @@ def run_installation(script_id, host_id):
     f.write(script.script)
     f.close()
 
-    @fabric_task
-    def install(script, script_file):
-        put(script_file, '/home/pi/deploy.sh', use_sudo=True)
-        url = mhn.config.get("SERVER_BASE_URL")
-        deploy_key = mhn.config.get("DEPLOY_KEY")
-        with cd("/home/pi/"):
-            run("bash /tmp/deploy.sh {url} {deploy_key}".format(url=url, deploy_key=deploy_key, id=script.id))
+    with fab_settings(warn_only=True, abort_exception=FabricException, abort_on_prompts=True, **host.fab_env):
 
-    with fab_settings(**host.fab_env):
-        install(script, filename)
+        result = install(script, filename)
+
+    if isinstance(result, Exception):
+        raise result
+
+    # We rely on the installation scripts to handle the registration of the installed sensor with mhn-server,
+    # so we don't have access to the id of the sensor that we just installed on the host.
+
+    # We look it up based on three things:
+    #   1) it will not have an associated host
+    #   2) it will have the script we just used
+    #   3) its hostname will be our host's hostname
+
+    sensor = Sensor.query.filter(Sensor.host_id == None).filter(Sensor.hostname == host.hostname)
+    # this is a bit brittle, because if we the host's hostname changes during installation,
+    # the names might not match.
+    if sensor.count() != 1:
+        raise Exception("found {} sensor(s), instead of 1. ;(".format(sensor.count()))
+    else:
+        sensor = sensor[0]
+
+    # associate the sensor with the host
+    sensor.host = host
+    db.session.commit()
 
 @celery.task
 def run_updates():

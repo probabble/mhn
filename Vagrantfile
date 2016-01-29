@@ -29,14 +29,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     honeypot.vm.box = "ubuntu/trusty64" # Ubuntu 14.04
     #honeypot.vm.box = "hashicorp/precise64" # Ubuntu 12.04
     honeypot.vm.network "private_network", ip: "10.254.254.101"
-    
-    honeypot.vm.provision :shell, inline: 'echo mhn-honeypot > /etc/hostname'
-    honeypot.vm.provision :shell, inline: 'echo "127.0.1.1 mhn-honeypot" >> /etc/hosts'
+    honeypot.vm.provision :shell, inline: 'echo honeypie > /etc/hostname'
+    honeypot.vm.provision :shell, inline: 'echo "127.0.1.1 honeypie" >> /etc/hosts'
     honeypot.vm.provision :shell, inline: 'hostname honeypie'
+    honeypot.vm.network :forwarded_port, guest: 51122, host: 51122
     honeypot.ssh.guest_port = 51122
   end
-
-
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
