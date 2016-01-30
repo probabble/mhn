@@ -147,8 +147,7 @@ def run_updates():
     def update(sensor_host):
 
         try:
-            sudo("DEBIAN_FRONTEND=noninteractive apt-get update")
-            sudo("DEBIAN_FRONTEND=noninteractive apt-get upgrade")
+            sudo("unattended-upgrade")
             sensor_host.status = "ok"
             sensor_host.exception = None
 
@@ -157,8 +156,9 @@ def run_updates():
             sensor_host.exception = str(e)
 
     for host in sensor_hosts:
-        with fab_settings(**host.fab_env):
+        with fab_settings(warn_only=True, abort_exception=FabricException, abort_on_prompts=True, **host.fab_env):
             update(host)
+
         db.session.commit()
 
 @celery.task
@@ -179,14 +179,15 @@ def run_pings(host_id=None):
         try:
             result = run("hostname")
             sensor_host.status = "ok"
-            db.session.commit()
+            sensor_host.exception = None
             return result
 
         except Exception, e:
             sensor_host.status = "lost"
-            db.session.commit()
-            raise Exception(e)
+            sensor_host.exception = str(e)
 
     for host in sensor_hosts:
-        with fab_settings(**host.fab_env):
+        with fab_settings(abort_exception=FabricException, abort_on_prompts=True, **host.fab_env):
             ping(host)
+        db.session.commit()
+
