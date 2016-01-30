@@ -35,7 +35,7 @@ def configure_sensors():
     @fabric_task
     def configure():
         # start by refreshing the dns on the mhn server machine.
-        local("sudo /etc/init.d/dns-clean restart")
+        local("/etc/init.d/dns-clean restart")
 
         # change the hostname of the sensor: we'll just use a random honeypie hostname.
         try:
