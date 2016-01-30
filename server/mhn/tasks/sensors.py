@@ -58,7 +58,7 @@ def configure_sensors():
         else:
             # we probably shouldn't be here at this point - if the hostname
             # has already been changed, we shouldn't be accessing this sensor
-            new_hostname = current_hostname
+            return
 
         # create the new SensorHost object to track it
         host = SensorHost(hostname=new_hostname, status="New")
@@ -155,7 +155,7 @@ def run_updates():
 
         except Exception, e:
             sensor_host.status = "error"
-            sensor_host.exception = e
+            sensor_host.exception = str(e)
 
     for host in sensor_hosts:
         with fab_settings(**host.fab_env):
