@@ -1,3 +1,5 @@
+import uuid
+
 from fabric.contrib.files import sed
 from fabric.exceptions import NetworkError
 from fabric.operations import run, sudo, local, put
@@ -46,7 +48,7 @@ def configure_sensors():
 
         if current_hostname == "honeypie":
             # todo: pick good hostnames
-            new_hostname = "honeypie" # + uuid.uuid4().hex
+            new_hostname = "honeypie" + uuid.uuid4().hex
             sudo('hostname {}'.format(new_hostname))
             sudo('echo {} > /etc/hostname'.format(new_hostname))
             sed('/etc/hosts', 'honeypie', new_hostname, use_sudo=True)
