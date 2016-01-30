@@ -59,7 +59,6 @@ def configure_sensors():
             # has already been changed, we shouldn't be accessing this sensor
             new_hostname = current_hostname
 
-
         # create the new SensorHost object to track it
         host = SensorHost(hostname=new_hostname, status="New")
         db.session.add(host)
@@ -73,7 +72,7 @@ def configure_sensors():
 
         # disable the old key on the sensor host
 
-    with fab_settings(warn_only=True, **UNCONFIGURED):
+    with fab_settings(warn_only=True, abort_on_prompts=True, **UNCONFIGURED):
         configure()
 
 @celery.task()
@@ -157,11 +156,10 @@ def run_updates():
             sensor_host.status = "error"
             sensor_host.exception = e
 
-        db.session.commit()
-
     for host in sensor_hosts:
         with fab_settings(**host.fab_env):
             update(host)
+        db.session.commit()
 
 @celery.task
 def run_pings(host_id=None):
