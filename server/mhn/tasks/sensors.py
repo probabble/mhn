@@ -21,7 +21,7 @@ UNCONFIGURED = dict(
     user = 'pi',
     password = 'raspberry',
     port = mhn.config['SENSOR_SSH_PORT'],
-    ssh_keyfile=mhn.config['SENSOR_KEYS_DIR'] + 'unconfigured'
+    ssh_keyfile=mhn.config['SENSOR_KEYS_DIR'] + 'unconfigured_rsa'
 )
 
 class FabricException(Exception):
@@ -48,7 +48,7 @@ def configure_sensors():
 
         if current_hostname == "honeypie":
             # todo: pick good hostnames
-            new_hostname = "honeypie" + uuid.uuid4().hex
+            new_hostname = "honeypie-" + uuid.uuid4().hex
             sudo('hostname {}'.format(new_hostname))
             sudo('echo {} > /etc/hostname'.format(new_hostname))
             sed('/etc/hosts', 'honeypie', new_hostname, use_sudo=True)
