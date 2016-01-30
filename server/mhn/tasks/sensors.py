@@ -47,18 +47,17 @@ def configure_sensors():
             print "No unconfigured sensors found on the network... nothing to do here."
             return
 
-        if current_hostname == "honeypie":
-            # todo: pick good hostnames
-            new_hostname = "honeypie-" + uuid.uuid4().hex
-            sudo('hostname {}'.format(new_hostname))
-            sudo('echo {} > /etc/hostname'.format(new_hostname))
-            sed('/etc/hosts', 'honeypie', new_hostname, use_sudo=True)
-            sudo('hostname {}'.format(new_hostname))
-
-        else:
+        if current_hostname != "honeypie":
             # we probably shouldn't be here at this point - if the hostname
             # has already been changed, we shouldn't be accessing this sensor
             return
+
+        # todo: pick good hostnames
+        new_hostname = "honeypie-" + uuid.uuid4().hex
+        sudo('hostname {}'.format(new_hostname))
+        sudo('echo {} > /etc/hostname'.format(new_hostname))
+        sed('/etc/hosts', 'honeypie', new_hostname, use_sudo=True)
+        sudo('hostname {}'.format(new_hostname))
 
         # create the new SensorHost object to track it
         host = SensorHost(hostname=new_hostname, status="New")
