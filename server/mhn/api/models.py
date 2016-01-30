@@ -75,7 +75,9 @@ class SensorHost(db.Model, APIModel):
             password = 'raspberry',
             host_string = SENSOR_HOST_LOCATION.format(hostname=self.hostname),
             hostname=self.hostname,
+            key_filename=self.keyfile,
             ssh_keyfile=self.keyfile,
+
             port=mhn.config['SENSOR_SSH_PORT'],
         )
 

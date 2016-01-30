@@ -21,7 +21,8 @@ UNCONFIGURED = dict(
     user = 'pi',
     password = 'raspberry',
     port = mhn.config['SENSOR_SSH_PORT'],
-    ssh_keyfile=mhn.config['SENSOR_KEYS_DIR'] + 'unconfigured_rsa'
+    ssh_keyfile=mhn.config['SENSOR_KEYS_DIR'] + 'unconfigured_rsa',
+    key_filename=mhn.config['SENSOR_KEYS_DIR'] + 'unconfigured_rsa'
 )
 
 class FabricException(Exception):
