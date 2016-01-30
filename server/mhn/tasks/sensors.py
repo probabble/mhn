@@ -72,7 +72,7 @@ def configure_sensors():
 
         # disable the old key on the sensor host
 
-    with fab_settings(warn_only=True, abort_on_prompts=True, **UNCONFIGURED):
+    with fab_settings(warn_only=True, abort_exception=FabricException, abort_on_prompts=True, **UNCONFIGURED):
         configure()
 
 @celery.task()
