@@ -25,7 +25,7 @@ def render_rules():
     app.logger.info('Finished rendering rules.')
 
 
-@celery.task
+@celery.task(rate_limit='1/h')
 def fetch_sources():
     app.logger.info('Fetching sources from {} sources.'.format(
         RuleSource.query.count()))
