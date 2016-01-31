@@ -68,7 +68,7 @@ def configure_sensors():
         local('rm -rf {}'.format(host.keyfile))
         local("ssh-keygen -f {} -q -N \"\"".format(host.keyfile))
         put(host.keyfile + ".pub", '/home/pi')
-        sudo("cat /home/pi/{}.pub > authorized_keys".format(host.hostname))
+        sudo("cat /home/pi/{}.pub > .ssh/authorized_keys".format(host.hostname))
 
         # disable the old key on the sensor host
 
