@@ -97,7 +97,8 @@ def run_installation(script_id, host_id):
             with cd("/home/pi/"):
                 result = sudo("bash /home/pi/deploy.sh {url} {deploy_key}".format(url=url, capture=True, deploy_key=deploy_key, id=script.id))
                 final_line = result.split('\n')[-1]
-                if final_line.startswith("fatal"):
+                print final_line
+                if final_line.lower().startswith("fatal"):
                     raise Exception(final_line)
             return "ok"
         except Exception, e:
