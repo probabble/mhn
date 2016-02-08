@@ -14,7 +14,7 @@ hostname=$(hostname)
 
 sudo apt-get install -y curl
 
-curl -s -X POST -H "Content-Type: application/json" -d "{
+curl -s -k -X POST -H "Content-Type: application/json" -d "{
 	\"name\": \"${hostname}-${honeypot}\", 
 	\"hostname\": \"$hostname\", 
 	\"deploy_key\": \"$deploy_key\",

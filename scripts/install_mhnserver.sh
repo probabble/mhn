@@ -68,7 +68,7 @@ EOF
 
 cat > /etc/supervisor/conf.d/mhn-celery-worker.conf <<EOF 
 [program:mhn-celery-worker]
-command=$MHN_HOME/env/bin/celery worker -A mhn.tasks --loglevel=INFO
+command=$MHN_HOME/env/bin/celery worker -A mhn.tasks --loglevel=INFO --pidfile=/run/mhn-celery-worker.pid
 directory=$MHN_HOME/server
 stdout_logfile=/var/log/mhn/mhn-celery-worker.log
 stderr_logfile=/var/log/mhn/mhn-celery-worker.err
