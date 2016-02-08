@@ -443,7 +443,7 @@ class hpfeedihandler(ihandler):
 
 	def handle_incident_dionaea_modules_python_smb_dcerpc_request(self, i):
 		if not hasattr(i, 'con') or not self.client.connected: return
-		logger.debug('dcerpc request, publishing uuid {0}, opnum {1}'.format(i.uuid, i.opnum))
+		logger.debug('dcerpc request, publishing euuid {0}, opnum {1}'.format(i.uuid, i.opnum))
 		try:
 			self.client.publish(DCECHAN, uuid=i.uuid, opnum=i.opnum,
 				saddr=i.con.remote.host, sport=str(i.con.remote.port),

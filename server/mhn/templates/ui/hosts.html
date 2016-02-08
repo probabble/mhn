@@ -50,7 +50,10 @@
                         <td>{{ host.status }}</td>
                         <td>{{ host.updated }}</td>
                         <td>{{ host.exception }}</td>
-                        <td>{{ host.sensors }}</td>
+                        <td>{% for sensor in host.sensors %}
+                            <p>{{ sensor.name }}: {{ sensor.honeypot }}</p>
+                            {% endfor %}
+                        </td>
 
                     </tr>
                     {% endfor %}

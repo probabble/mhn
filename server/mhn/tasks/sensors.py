@@ -86,23 +86,23 @@ def run_installation(script_id, host_id):
 
     @fabric_task
     def install(script, script_file):
-        try:
-            put(script_file, '/home/pi/deploy.sh', use_sudo=True)
-            url = mhn.config.get("SERVER_BASE_URL")
-            port = mhn.config.get("SERVER_PORT", None)
-            if port:
-                url += ":{}".format(port)
 
-            deploy_key = mhn.config.get("DEPLOY_KEY")
-            with cd("/home/pi/"):
+        put(script_file, '/home/pi/deploy.sh')
+        url = mhn.config.get("SERVER_BASE_URL")
+        port = mhn.config.get("SERVER_PORT", None)
+        if port:
+            url += ":{}".format(port)
+
+        deploy_key = mhn.config.get("DEPLOY_KEY")
+        with cd("/home/pi/"):
+            with fab_settings(warn_only=True):
                 result = sudo("bash /home/pi/deploy.sh {url} {deploy_key}".format(url=url, capture=True, deploy_key=deploy_key, id=script.id))
-                final_line = result.split('\n')[-1]
-                print final_line
-                if final_line.lower().startswith("fatal"):
-                    raise Exception(final_line)
-            return "ok"
-        except Exception, e:
-            return Exception(e)
+            final_line = result.split('\n')[-1]
+            print final_line
+            if final_line.lower().startswith("fatal"):
+                return Exception(final_line)
+        return "ok"
+
 
     script = DeployScript.query.get(script_id)
     host = SensorHost.query.get(host_id)
@@ -113,12 +113,8 @@ def run_installation(script_id, host_id):
     f.write(script.script)
     f.close()
 
-    with fab_settings(warn_only=True, abort_exception=FabricException, abort_on_prompts=True, **host.fab_env):
-
+    with fab_settings(abort_exception=FabricException, abort_on_prompts=True, **host.fab_env):
         result = install(script, filename)
-
-    if isinstance(result, Exception):
-        raise result
 
     # We rely on the installation scripts to handle the registration of the installed sensor with mhn-server,
     # so we don't have access to the id of the sensor that we just installed on the host.
@@ -131,13 +127,22 @@ def run_installation(script_id, host_id):
     sensor = Sensor.query.filter(Sensor.host_id == None).filter(Sensor.hostname == host.hostname)
     # this is a bit brittle, because if we the host's hostname changes during installation,
     # the names might not match.
+    failed = isinstance(result, Exception)
     if sensor.count() != 1:
-        raise Exception("found {} sensor(s), instead of 1. ;(".format(sensor.count()))
+        if failed:
+            raise result
+        else:
+            raise Exception("found {} sensor(s), instead of 1. ;(".format(sensor.count()))
     else:
         sensor = sensor[0]
 
+    if failed:
+        db.session.delete(sensor)
+        db.session.commit()
+        raise result
+
     # associate the sensor with the host
-    sensor.host = host
+    sensor.host_id = host.id
     db.session.commit()
 
 @celery.task

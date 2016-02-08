@@ -123,7 +123,7 @@ class Sensor(db.Model, APIModel):
     honeypot = db.Column(db.String(50))
 
     host_id = db.Column(db.Integer, db.ForeignKey("sensorhosts.id"), nullable=True)
-    # host = relationship("SensorHost", back_populates="sensors")
+    host = relationship("SensorHost")
 
 
     def __init__(
